@@ -7,7 +7,10 @@ import pandas as pd
 # 1️⃣ Load Trained Pipeline
 # ============================
 
-model = joblib.load("model.pkl")
+import os
+
+MODEL_PATH = os.path.join(os.path.dirname(__file__), "model.pkl")
+model = joblib.load(MODEL_PATH)
 
 app = FastAPI(title="Telco Churn Prediction API")
 
