@@ -4,16 +4,15 @@ import joblib
 import pandas as pd
 
 # ============================
-# 1️⃣ Load Trained Pipeline
+# Load Model
 # ============================
 
 model = joblib.load("model.pkl")
 
 app = FastAPI(title="Telco Churn Prediction API")
 
-
 # ============================
-# 2️⃣ Define Input Schema
+# Input Schema
 # ============================
 
 class CustomerData(BaseModel):
@@ -39,7 +38,7 @@ class CustomerData(BaseModel):
 
 
 # ============================
-# 3️⃣ Health Check Endpoint
+# Health Check
 # ============================
 
 @app.get("/")
@@ -48,17 +47,47 @@ def home():
 
 
 # ============================
-# 4️⃣ Prediction Endpoint
+# Business Decision Logic
+# ============================
+
+def churn_business_decision(prob):
+
+    if prob > 0.7:
+        return {
+            "risk_level": "High",
+            "recommended_action": "Offer retention discount or call customer"
+        }
+
+    elif prob > 0.4:
+        return {
+            "risk_level": "Medium",
+            "recommended_action": "Send promotional email or loyalty reward"
+        }
+
+    else:
+        return {
+            "risk_level": "Low",
+            "recommended_action": "No action required"
+        }
+
+
+# ============================
+# Prediction Endpoint
 # ============================
 
 @app.post("/predict")
 def predict(data: CustomerData):
+
     input_df = pd.DataFrame([data.dict()])
-    
+
     prediction = model.predict(input_df)[0]
     probability = model.predict_proba(input_df)[0][1]
 
+    decision = churn_business_decision(probability)
+
     return {
         "churn_prediction": int(prediction),
-        "churn_probability": round(float(probability), 4)
+        "churn_probability": round(float(probability), 4),
+        "risk_level": decision["risk_level"],
+        "recommended_action": decision["recommended_action"]
     }
